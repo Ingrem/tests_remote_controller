@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/main_page_v.1.3.css' %}">
+        <link rel="shortcut icon" href="/static/main_page.png" type="image/x-icon">
+        <title>QA remote controller</title>
+    </head>
+    <body>
+        <form class="form_margin">
+            <div class="div_with_margin"><input type="button" class="button_with_picture_json" id="documentation" value ="documentation"></div>
+            <div class="div_with_margin"><input type="button" class="button_with_picture_json" id="reports" value ="reports"></div>
+            <div class="div_with_margin"><input type="button" class="button_with_picture_json" id="simple_web_socket" value ="json and socket"></div>
+        </form>
+    </body>
+    <script>
+    document.querySelector('#reports').onclick = function(e) {
+             location.href = "/reports";
+    };
+    document.querySelector('#simple_web_socket').onclick = function(e) {
+             location.href = "/simple_web_socket";
+    };
+    document.querySelector('#documentation').onclick = function(e) {
+             location.href = "/documentation";
+    };
+    </script>
+</html>

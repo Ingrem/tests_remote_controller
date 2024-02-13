@@ -1,0 +1,48 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/documentation_controller_v.1.2.css' %}">
+        <link rel="shortcut icon" href="/static/main_page.png" type="image/x-icon">
+        <title>QA remote controller</title>
+    </head>
+    <body>
+    <table>
+        <tr class="mio-tr">
+        <td class="mio-td"><div><input class="button_back" id="return" readonly></div></td>
+        <td class="mio-td"><div><input type="button" class="uk-button uk-button-success" id="create_new" value="Add new feature" readonly></div></td>
+        </tr>
+    </table>
+        <form>
+        <div id="main_div">
+        </div>
+        </form>
+    </body>
+<script>
+    var report_soket = new WebSocket("ws://" + window.location.host + "/documentation$");
+
+    function open_directory(dir) {
+        report_soket.send(JSON.stringify({"select_directory": dir.id.toString()}));
+    }
+
+    report_soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var rez_html = data['rez_html'];
+        if (rez_html == '') {
+            window.open(data['open_link']);
+        }
+        else {
+            document.getElementById('main_div').innerHTML = rez_html;
+        }
+    };
+
+    document.querySelector('#return').onclick = function(e) {
+        report_soket.send(JSON.stringify({"select_directory": "return_button"}));
+    };
+
+    document.querySelector('#create_new').onclick = function(e) {
+             location.href = "https://jira.ru";
+    };
+</script>
+</html>

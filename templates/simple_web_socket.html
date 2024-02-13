@@ -1,0 +1,318 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/simple_web_socket.v1.2.css' %}">
+    <link rel="shortcut icon" href="/static/simple_soket.png" type="image/x-icon">
+    <title>simple_web_socket</title>
+</head>
+<body>
+<div class="row">
+    <div class="column">
+        <form>
+            <table>
+                <tr>
+                    <td>URL:</td>
+                    <td><input value="ws://0.0.0.0:0000" id="url_text" name="url_text" size="20"></td>
+
+                    <td>soket:</td>
+                    <td class="th_with_border">
+                    <input type="button" class="uk-button uk-button-success" id="send" value="Send">
+                    <input type="button" class="uk-button uk-button-success" id="send_and_sub" value="Send and sub">
+                    <input type="button" class="uk-button uk-button-danger" disabled id="stop_sub" value="Stop sub">
+                    </td>
+
+                    <td>json make:</td>
+                    <td class="th_with_border">
+                    <input type="button" class="uk-button uk-button-primary" id="make_json" value="json">
+                    <input type="button" class="uk-button uk-button-primary" id="str" value="str">
+                    <input type="button" class="uk-button uk-button-primary" id="dict" value="dict">
+                    </td>
+
+                    <td><div id="valid_json" class="div_for_validator">
+                    json validator
+                    </div></td>
+
+                    <td class="th_with_border">
+                    <input type="button" class="uk-button uk-button-primary" id="compare_json" value="compare">
+                    </td>
+
+                     <td class="th_with_border" id="hidden_buttons" hidden="true">
+                    <input type="button" class="uk-button uk-button-primary" id="make_json_right" value="json">
+                    <input type="button" class="uk-button uk-button-primary" id="hide_field" value="hide">
+                    </td>
+
+
+                    <td><input type="button" class="uk-button uk-button-danger" id="clear_request" value="Clear"></td>
+                    <th class="uk-form">
+                    <select id="wrap_request" style="margin-bottom: 0px;">
+                        <option value="pre">wrap off</option>
+                        <option value="pre-wrap">wrap soft</option>
+                    </select>
+                    </th>
+                    <td class="th_with_border">
+                    <input type="button" class="uk-button uk-button-primary" id="make_link" value="make link">
+                    </td>
+                    <td><div id="link" contenteditable="true" class="div_for_validator"></div></td>
+                </tr>
+            </table>
+            <table>
+                <td><div class="div_for_text" id="Request" contenteditable="true">{{ cached }}</div></td>
+
+                <td><div class="div_for_text" id="compare_json_text"  contenteditable="true" hidden="true"></div></td>
+            </table>
+            <table id="table_buttons_respond" hidden="true">
+                <tr>
+                    <td>Response</td>
+                    <td><input type="button" class="uk-button uk-button-danger" id="clear" value="Clear"></td>
+                    <th class="uk-form">
+                    <select id="wrap_response" style="margin-bottom: 0px;">
+                        <option value="off">wrap off</option>
+                        <option value="soft">wrap soft</option>
+                        <option value="hard">wrap hard</option>
+                    </select>
+                    </th>
+                    <td>json make:</td>
+                    <td class="th_with_border">
+                    <input type="button" class="uk-button uk-button-primary" id="make_json_response" value="json">
+                    <input type="button" class="uk-button uk-button-primary" id="str_response" value="str">
+                    </td>
+                </tr>
+            </table>
+            <table id="table_text_respond" hidden="true">
+                <tr>
+                    <td><textarea id="logs_text" name="log_text_area"  readonly cols="220" rows="25" wrap="off"></textarea></td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+</body>
+<script>
+    // Soket
+
+    var main_soket = new WebSocket("ws://" + window.location.host + "/simple_web_socket");
+    main_soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var message = data['message'];
+        document.getElementById('logs_text').value = message;
+    };
+
+    document.querySelector('#send').onclick = function(e) {
+        main_soket.send(JSON.stringify({
+            "command": "send_msg", "url": document.getElementById('url_text').value,
+            "msg": document.getElementById('Request').innerHTML,
+            }));
+        document.querySelector('#send_and_sub').disabled = false;
+        document.querySelector('#stop_sub').disabled = true;
+
+        document.querySelector('#compare_json_text').hidden = true;
+        document.querySelector('#Request').style.height = "400px";
+        document.querySelector('#Request').style.width = "1780px";
+        document.querySelector('#table_buttons_respond').hidden = false;
+        document.querySelector('#table_text_respond').hidden = false;
+    };
+
+    var main_soket_and_sub = new WebSocket("ws://" + window.location.host + "/simple_web_socket");
+    main_soket_and_sub.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var message = data['message'];
+        document.getElementById('logs_text').value += message;
+    };
+
+    document.querySelector('#send_and_sub').onclick = function(e) {
+        document.getElementById('logs_text').value = "";
+        main_soket_and_sub.send(JSON.stringify({
+            "command": "send_msg_and_sub", "url": document.getElementById('url_text').value,
+            "msg": document.getElementById('Request').innerHTML,
+            }));
+        document.querySelector('#send_and_sub').disabled = true;
+        document.querySelector('#stop_sub').disabled = false;
+
+        document.querySelector('#compare_json_text').hidden = true;
+        document.querySelector('#Request').style.height = "400px";
+        document.querySelector('#Request').style.width = "1780px";
+        document.querySelector('#table_buttons_respond').hidden = false;
+        document.querySelector('#table_text_respond').hidden = false;
+    };
+
+    var stop_sub_socket = new WebSocket("ws://" + window.location.host + "/simple_web_socket");
+    document.querySelector('#stop_sub').onclick = function(e) {
+        stop_sub_socket.send(JSON.stringify({
+            "command": "stop_sub"
+            }));
+        document.querySelector('#send_and_sub').disabled = false;
+        document.querySelector('#stop_sub').disabled = true;
+    };
+
+    // Json make
+
+    var extra_soket = new WebSocket("ws://" + window.location.host + "/simple_web_socket");
+    extra_soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var message = data['message'];
+        document.getElementById('Request').innerHTML = message;
+    };
+
+    document.querySelector('#str').onclick = function(e) {
+        extra_soket.send(JSON.stringify({
+            "command": "make_str", "msg": document.getElementById('Request').innerHTML,
+            }));
+    };
+
+    var json_make_soket = new WebSocket("ws://" + window.location.host + "/simple_web_socket");
+    json_make_soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var message = data['message'];
+        var valid_json = data['valid_json'];
+        document.getElementById('Request').innerHTML = message;
+
+        if (valid_json == 'Valid') {
+        document.getElementById('valid_json').style.color = 'green';
+        }
+        else{
+        document.getElementById('valid_json').style.color = 'red';
+        }
+        document.getElementById('valid_json').innerHTML = valid_json;
+    };
+
+    var json_right_make_soket = new WebSocket("ws://" + window.location.host + "/simple_web_socket");
+    json_right_make_soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var message = data['message'];
+        var valid_json = data['valid_json'];
+        document.getElementById('compare_json_text').innerHTML = message;
+
+        if (valid_json == 'Valid') {
+        document.getElementById('valid_json').style.color = 'green';
+        }
+        else{
+        document.getElementById('valid_json').style.color = 'red';
+        }
+        document.getElementById('valid_json').innerHTML = valid_json;
+    };
+
+    document.querySelector('#make_json').onclick = function(e) {
+        json_make_soket.send(JSON.stringify({
+            "command": "make_json", "msg": document.getElementById('Request').innerHTML,
+            }));
+    };
+
+    document.getElementById('make_json_right').onclick = function(e) {
+        json_right_make_soket.send(JSON.stringify({
+            "command": "make_json", "msg": document.getElementById('compare_json_text').innerHTML,
+            }));
+    };
+
+    document.querySelector('#dict').onclick = function(e) {
+        extra_soket.send(JSON.stringify({
+            "command": "dict", "msg": document.getElementById('Request').innerHTML,
+            }));
+    };
+
+    var str_response_socket = new WebSocket("ws://" + window.location.host + "/simple_web_socket");
+    str_response_socket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var message = data['message'];
+        document.getElementById('logs_text').value = message;
+    };
+
+    document.querySelector('#str_response').onclick = function(e) {
+        str_response_socket.send(JSON.stringify({
+            "command": "make_str", "msg": document.getElementById('logs_text').value,
+            }));
+    };
+
+    var json_make_response_soket = new WebSocket("ws://" + window.location.host + "/simple_web_socket");
+    json_make_response_soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var message = data['message'];
+        document.getElementById('logs_text').value = message;
+    };
+
+    document.querySelector('#make_json_response').onclick = function(e) {
+        json_make_response_soket.send(JSON.stringify({
+            "command": "make_json", "msg": document.getElementById('logs_text').value,
+            }));
+    };
+
+    // json compare
+
+    var json_compare_soket = new WebSocket("ws://" + window.location.host + "/simple_web_socket");
+    json_compare_soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var json_1 = data['message'];
+        var json_2 = data['json_2'];
+        document.getElementById('Request').innerHTML = json_1;
+        document.getElementById('compare_json_text').innerHTML = json_2;
+
+        var valid_json = data['valid_json'];
+        if (valid_json == 'json valid: compare like jsons') {
+        document.getElementById('valid_json').style.color = 'green';
+        }
+        else{
+        document.getElementById('valid_json').style.color = 'red';
+        }
+        document.getElementById('valid_json').innerHTML = valid_json;
+    };
+
+    document.querySelector('#compare_json').onclick = function(e) {
+        if (document.querySelector('#compare_json_text').hidden == true) {
+            document.querySelector('#compare_json_text').hidden = false;
+            document.getElementById('hidden_buttons').hidden = false;
+            document.querySelector('#Request').style.height = "850px";
+            document.querySelector('#Request').style.width = "880px";
+            document.querySelector('#compare_json_text').style.width = "880px";
+        }
+        else {
+        json_compare_soket.send(JSON.stringify({
+            "command": "compare_json", "json_1": document.getElementById('Request').innerHTML,
+            "json_2": document.getElementById('compare_json_text').innerHTML
+            }));
+        }
+    };
+
+    document.getElementById('hide_field').onclick = function(e) {
+        document.querySelector('#compare_json_text').hidden = true;
+        document.getElementById('hidden_buttons').hidden = true;
+        document.querySelector('#Request').style.height = "850px";
+        document.querySelector('#Request').style.width = "1780px";
+    };
+
+    // make link
+
+    var make_link_soket = new WebSocket("ws://" + window.location.host + "/simple_web_socket");
+    make_link_soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var message = data['message'];
+        document.getElementById('link').innerHTML = message;
+    };
+
+    document.querySelector('#make_link').onclick = function(e) {
+        make_link_soket.send(JSON.stringify({
+            "command": "make_link", "save_text": document.getElementById('Request').innerHTML,
+            }));
+    };
+
+    // simple js
+
+    document.querySelector('#clear').onclick = function(e) {
+        document.getElementById('logs_text').value = "";
+    };
+
+    document.querySelector('#clear_request').onclick = function(e) {
+        document.getElementById('Request').innerHTML = "";
+    };
+
+    //select (combobox)
+    document.querySelector('#wrap_response').onchange = function(e) {
+        document.getElementById('logs_text').wrap = document.querySelector('#wrap_response').value;
+    };
+    //select (combobox)
+    document.querySelector('#wrap_request').onchange = function(e) {
+        document.getElementById('Request').style.whiteSpace = document.querySelector('#wrap_request').value;
+    };
+
+</script>
+</html>

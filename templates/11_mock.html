@@ -1,0 +1,246 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/11_mock_v.1.1.css' %}">
+    <link rel="shortcut icon" href="/static/11_mock.ico" type="image/x-icon">
+    <title>Performance controller</title>
+</head>
+<body>
+<div class="row">
+    <div class="column">
+        <form>
+            <h1>11 mock controller</h1>
+
+            <table>
+                <tr>
+                    <td><h3>host ip</h3></td>
+                    <td><textarea class="uk-form textarea" id="ip_text" name="ip_text" cols="20" rows="1">0.0.0.0</textarea></td>
+                </tr>
+                <tr>
+                    <td><h3>host port</h3></td>
+                    <td><textarea class="uk-form textarea" id="port_text" name="port_text" cols="20" rows="1">00000</textarea></td>
+                </tr>
+            </table>
+            <table>
+                <tr>
+                    <td><input type="button" class="uk-button uk-button-success" id="start_performance" value="Start performance"></td>
+                    <td><input type="button" class="uk-button uk-button-danger"  id="stop_performance" value="Stop performance"></td>
+                </tr>
+            </table>
+            <table class="mio-table">
+                <tr>
+                <tr>
+                    <td><h3>Multiplier:</h3></td>
+                    <td><h3>X - 1</h3></td>
+                    <td><input type="checkbox" id="Settings_X_1" name="Settings_X_1" checked></td>
+                    <td><h3>X - 2</h3></td>
+                    <td><input type="checkbox" id="Settings_X_2" name="Settings_X_2"></td>
+                    <td><h3>manual</h3></td>
+                    <td><input type="checkbox" id="checkbox_settings_manual" name="checkbox_settings_manual"></td>
+                </tr>
+            </table>
+            <table class="mio-table">
+                <td><h3>123: </h3></td>
+                <td><input type="checkbox" id="checkbox_1a"></td>
+            </table>
+            <table class="mio-table">
+                <tr>
+                    <td><h3>Test time:</h3>
+                    <h3>hours:</h3>
+                    <textarea class="uk-form textarea" id="TEST_TIME_CONFIG_H" name="TEST_TIME_CONFIG_H" cols="5" rows="1">1</textarea>
+                    <h3>minutes:</h3>
+                    <textarea class="uk-form textarea" id="TEST_TIME_CONFIG_M" name="TEST_TIME_CONFIG_M" cols="5" rows="1">0</textarea>
+                    <h3>seconds:</h3>
+                    <textarea class="uk-form textarea" id="TEST_TIME_CONFIG_S" name="TEST_TIME_CONFIG_S" cols="5" rows="1">0</textarea></td>
+                </tr>
+            </table>
+
+            <table class="mio-table" id="manual_settings_panel"  hidden="true">
+                <tr>
+                    <td><h3>MSG_PER_SECOND</h3></td>
+                    <td><textarea class="uk-form textarea" id="MSG_PER_SECOND" name="MSG_PER_SECOND" cols="5" rows="1">10</textarea></td>
+                </tr>
+                <tr>
+                    <td><h3>SPEED_UP_MAX</h3></td>
+                    <td><textarea class="uk-form textarea" id="SPEED_UP_MAX" name="SPEED_UP_MAX" cols="5" rows="1">21</textarea></td>
+                </tr>
+                <tr>
+                    <td><h3>MESSAGES_LENGTH_COEFFICIENT</h3></td>
+                    <td><textarea class="uk-form textarea" id="MESSAGES_LENGTH_COEFFICIENT" name="MESSAGES_LENGTH_COEFFICIENT" cols="5" rows="1">1</textarea></td>
+                </tr>
+                <tr>
+                    <td><h3>PEAK_MSG_PER_SECOND</h3></td>
+                    <td><textarea class="uk-form textarea" id="PEAK_MSG_PER_SECOND" name="PEAK_MSG_PER_SECOND" cols="5" rows="1">60</textarea></td>
+                </tr>
+                <tr>
+                    <td><h3>PEAK_TIME_DELAY</h3></td>
+                    <td><textarea class="uk-form textarea" id="PEAK_TIME_DELAY" name="PEAK_TIME_DELAY" cols="5" rows="1">60</textarea></td>
+                </tr>
+                <tr>
+                    <td><h3>PEAK_TIME_DURATION</h3></td>
+                    <td><textarea class="uk-form textarea" id="PEAK_TIME_DURATION" name="PEAK_TIME_DURATION" cols="5" rows="1">3</textarea></td>
+                </tr>
+            </table>
+            <table>
+                <tr>
+                    <td><input type="button" class="uk-button uk-button-success" id="actual_config" value="Get BC config"></td>
+                    <td><input type="button" class="uk-button uk-button-success" id="set_config" value="Set BC config"></td>
+                </tr>
+            </table>
+        </form>
+        </div>
+        <div>
+            <h3>11 response</h3>
+            <textarea class="uk-form textarea" id="logs_text" name="log_text_area"  readonly cols="60" rows="10"></textarea>
+            <table>
+                <tr>
+                    <td><input type="button" class="uk-button uk-button-primary" id="generate_cache" value=" Generate / Update cache "></td>
+                    <td><input type="button" class="uk-button uk-button-primary" id="reset_obj_cache" value=" Clear cache "></td>
+                </tr>
+            </table>
+        </div>
+        <form>
+            <h3>Timer:</h3>
+            <h4 id="timer">0 seconds</h4>
+            <h3 id="test_timer_logs">Time log: </h3>
+        </form>
+</div>
+</body>
+<script>
+    // checkbox
+    document.querySelector('#checkbox_settings_manual').onclick = function(e) {
+        if (document.getElementById('checkbox_settings_manual').checked == true) {
+            document.getElementById('manual_settings_panel').hidden = false;
+            document.getElementById('Settings_X_1').checked = false;
+            document.getElementById('Settings_X_2').checked = false;
+        }
+        else {
+            document.getElementById('manual_settings_panel').hidden = true;
+            document.getElementById('Settings_X_1').checked = true;
+            document.getElementById('Settings_X_2').checked = false;
+        }
+    };
+
+    document.querySelector('#Settings_X_1').onclick = function(e) {
+        if (document.getElementById('Settings_X_1').checked == true) {
+            document.getElementById('manual_settings_panel').hidden = true;
+            document.getElementById('checkbox_settings_manual').checked = false;
+            document.getElementById('Settings_X_2').checked = false;
+        }
+        else {
+            document.getElementById('checkbox_settings_manual').checked = false;
+        }
+    };
+
+    document.querySelector('#Settings_X_2').onclick = function(e) {
+        if (document.getElementById('Settings_X_2').checked == true) {
+            document.getElementById('manual_settings_panel').hidden = true;
+            document.getElementById('checkbox_settings_manual').checked = false;
+            document.getElementById('Settings_X_1').checked = false;
+        }
+        else {
+            document.getElementById('checkbox_settings_manual').checked = false;
+        }
+    };
+
+    //Buttons
+    var timer = 0;
+
+    var soket = new WebSocket("ws://" + window.location.host + "/bc_mock");
+    soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var message = data['message'];
+        document.getElementById('logs_text').value = message;
+    };
+
+
+    var start_performance_soket = new WebSocket("ws://" + window.location.host + "/bc_mock");
+    start_performance_soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var message = data['message'];
+        if (message != "performance test started") {
+            timer = 0
+            document.getElementById('test_timer_logs').innerText += " - " + new Date().toLocaleString();
+        }
+        document.getElementById('logs_text').value = message;
+    };
+
+
+    document.querySelector('#start_performance').onclick = function(e) {
+        set_config();
+        start_performance_soket.send(JSON.stringify({
+            "message": "start_performance",
+            "ip": document.getElementById('ip_text').value,
+            "port": document.getElementById('port_text').value,
+             }));
+        timer = new Date().getTime()
+        document.getElementById('test_timer_logs').innerText += "\n" + new Date().toLocaleString();
+    };
+
+
+    document.querySelector('#stop_performance').onclick = function(e) {
+        soket.send(JSON.stringify({
+            "message": "stop_performance",
+            "ip": document.getElementById('ip_text').value,
+            "port": document.getElementById('port_text').value
+            }));
+        timer = 0
+        document.getElementById('test_timer_logs').innerText += " - " + new Date().toLocaleString();
+    };
+
+
+    document.querySelector('#generate_cache').onclick = function(e) {
+        soket.send(JSON.stringify({"message": "generate_cache",
+            "ip": document.getElementById('ip_text').value,
+            "port": document.getElementById('port_text').value,
+        }));
+    };
+
+    document.querySelector('#reset_obj_cache').onclick = function(e) {
+        soket.send(JSON.stringify({"message": "reset_obj_cache",
+            "ip": document.getElementById('ip_text').value,
+            "port": document.getElementById('port_text').value,
+        }));
+    };
+
+
+    document.querySelector('#actual_config').onclick = function(e) {
+        soket.send(JSON.stringify({"message": "get_config", "ip": document.getElementById('ip_text').value, "port": document.getElementById('port_text').value}));
+    };
+
+    function set_config() {
+        var TEST_TIME = String(Number(document.getElementById('TEST_TIME_CONFIG_S').value) +
+        Number(document.getElementById('TEST_TIME_CONFIG_M').value) * 60 +
+        Number(document.getElementById('TEST_TIME_CONFIG_H').value) * 60 * 60)
+
+        var new_config = {
+            "MSG_PER_SECOND": 10,
+            "TEST_TIME": TEST_TIME,
+            "SPEED_UP_MAX": 21,
+            "MESSAGES_LENGTH_COEFFICIENT": 1,
+            "PEAK_MSG_PER_SECOND": 60,
+            "PEAK_TIME_DELAY": 60,
+            "PEAK_TIME_DURATION": 3,
+        }
+
+        soket.send(JSON.stringify({
+        "message": "set_config",
+        "ip": document.getElementById('ip_text').value,
+        "port": document.getElementById('port_text').value,
+        "new_config": new_config
+        }));
+    };
+
+    document.querySelector('#set_config').onclick = function(e) {
+        set_config();
+    };
+
+/// timer
+    var interval = setInterval(function(){
+        if (timer==0) return;
+        document.getElementById('timer').innerHTML = ((new Date().getTime()-timer)/1000).toFixed(1) + " " + "seconds"
+    },100);
+</script>
+</html>

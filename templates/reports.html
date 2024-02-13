@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/reports_controller_v.1.1.css' %}">
+        <link rel="shortcut icon" href="/static/main_page.png" type="image/x-icon">
+        <title>QA remote controller</title>
+    </head>
+    <body>
+        <div><input class="button_back" id="return" readonly></div>
+        <form>
+        <div id="main_div">
+        </div>
+        </form>
+    </body>
+<script>
+    var report_soket = new WebSocket("ws://" + window.location.host + "/reports$");
+
+    function open_directory(dir) {
+        report_soket.send(JSON.stringify({"select_directory": dir.id.toString()}));
+    }
+
+    document.querySelector('#return').onclick = function(e) {
+        report_soket.send(JSON.stringify({"select_directory": "return_button"}));
+    };
+
+    report_soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var rez_html = data['rez_html'];
+        if (rez_html == '') {
+            location.href = "http://0.0.0.0".concat(data['open_link']);
+        }
+        else {
+            document.getElementById('main_div').innerHTML = rez_html;
+        }
+    };
+</script>
+</html>

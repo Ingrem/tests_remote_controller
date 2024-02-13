@@ -1,0 +1,216 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/integration_v1.4.css' %}">
+    <link rel="shortcut icon" href="/static/main_page.png" type="image/x-icon">
+    <title>e2e</title>
+</head>
+<body>
+<form>
+<div class="row">
+    <div class="column">
+        <div class="div_for_text" id="logs_text" contenteditable="true"></div>
+        <h8>errors and system output:</h8>
+        <div class="div_for_text_small" id="logs_text_warnings" contenteditable="true"></div>
+    </div>
+    <div class="center_div">
+        <table class="status-table">
+            <tbody id="status"> </tbody>
+        </table>
+        <table class="mio-table">
+            <tr>
+                <h8>price and visibility change</h8>
+            </tr>
+            <tr>
+                <td><h8>db feed timeout (sec):</h8></td>
+                <td><textarea class="uk-form textarea" id="FEED_TIMEOUT" name="FEED_TIMEOUT" cols="3" rows="1">100</textarea></td>
+                <td><h8>number of tests:</h8></td>
+                <td><textarea class="uk-form textarea" id="TESTS_ITER_COUNT" name="TESTS_ITER_COUNT" cols="3" rows="1">1</textarea></td>
+            </tr>
+        </table>
+
+        <table class="mio-table">
+            <tr>
+                <td><h8>login</h8></td>
+                <tr>
+                    <td><textarea class="uk-form textarea" id="login" name="login" cols="20" rows="1">1</textarea></td>
+                </tr>
+                    <td><h8>password</h8></td>
+                <tr>
+                    <td><textarea class="uk-form textarea" id="password" name="password" cols="20" rows="1">***</textarea></td>
+                </tr>
+            </tr>
+        </table>
+
+        <h5>_______________________________</h5>
+
+        <input type="button" class="uk-button uk-button-success" id="start_e2e" value="       test site       ">
+        <input type="button" class="uk-button uk-button-success" id="start_e2e_ios" value="       test ios        ">
+        <input type="button" class="uk-button uk-button-success" id="start_e2e_android" value="    test android    ">
+
+        <h5>_______________________________</h5>
+
+        <input type="button" class="uk-button uk-button-success" id="start_price_diff" value="    price change test    ">
+        <input type="button" class="uk-button uk-button-success" id="start_visibility_diff" value=" visibility change test ">
+
+        <h5>_______________________________</h5>
+
+        <input type="button" class="uk-button uk-button-danger" id="stop_tests" value="Stop tests">
+    </div>
+</div>
+</form>
+</body>
+
+<script>
+//Scroll
+    scroll = []
+    scroll_2 = []
+
+    var performance_status;
+    var tcp_status;
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://0.0.0.0:0000/status", false);
+            xhr.send(JSON.stringify({
+                performance_status: true
+            }));
+            performance_status = xhr.response;
+            xhr.abort();
+            xhr.open("POST", "http://0.0.0.0:000/status", false);
+            xhr.send(JSON.stringify({
+                tcp_status: true
+            }));
+            tcp_status = xhr.response;
+
+            if (tcp_status === 'False') {
+                var col1 = "<div style=color:red;>" + "NOT OK" + "</div>";
+            } else {
+                col1 = "<div style=color:green;>" + "OK" + "</div>";
+            }
+            if (performance_status === 'False') {
+                var col2 = "<div style=color:red;>" + "NOT PROCESS" + "</div>";
+            } else {
+                col2 = "<div style=color:green;>" + "PROCESS " + "</div>";
+            }
+
+            document.getElementById("status").innerHTML = "<tr>" + "<td>" + "<div class='left_algn'>" + "tcp status is" + "</div>" + "</td>" + "<td>" + "<div class='right_align'>" + col1 + "</div>" + "</td>" + "</tr>" +
+                "<tr>" + "<td>" + "<div class='left_algn'>" + "performance is " + "</div>" + "</td>" + "<td>" + "<div class='right_align'>" + col2 + "</div>" + "</td>" + "</tr>";
+        }
+        catch (e) {
+            document.getElementById("status").innerHTML = "<tr>" + "<div style=color:red;font-size:15px;>" + "bc-mock down" +  "</div>";
+        }
+
+    });
+
+
+
+    function start_scroll_down() {
+        scroll.push(setInterval(function(){ document.getElementById('logs_text').scrollBy(0, 1000);}, 500));
+        scroll_2.push(setInterval(function(){ document.getElementById('logs_text_warnings').scrollBy(0, 1000);}, 500));
+    }
+
+    document.querySelector('#logs_text').onclick = function(e) {
+        var i;
+
+        for (i = 0; i < scroll.length; i++) {
+            clearInterval(scroll[i]);
+        }
+    }
+
+    document.querySelector('#logs_text_warnings').onclick = function(e) {
+        var i;
+
+        for (i = 0; i < scroll_2.length; i++) {
+            clearInterval(scroll_2[i]);
+        }
+    }
+
+//Sockets
+
+    var base_soket = new WebSocket("ws://" + window.location.host + "");
+
+    base_soket.onmessage = function(evt) {
+        var data = JSON.parse(evt.data);
+        var message = data['message'];
+        var lvl = data['lvl'];
+
+        if (lvl == 'INFO') {
+            document.getElementById('logs_text').innerHTML += message + "\n";
+        }
+        if (lvl == 'ERROR') {
+            document.getElementById('logs_text').innerHTML += '<p style="color: red;">' + message + '</p>';
+            document.getElementById('logs_text_warnings').innerHTML += '<p style="color: red;">' + message + '</p>';
+        }
+        if (lvl == 'SUCCESS') {
+            document.getElementById('logs_text').innerHTML += '<p style="color: green;">' + message + '</p>';
+        }
+        if (lvl == 'SYSTEM') {
+            document.getElementById('logs_text_warnings').innerHTML += message;
+        }
+    };
+
+//Buttons
+    document.querySelector('#start_e2e').onclick = function(e) {
+        start_scroll_down()
+        document.getElementById('logs_text').innerHTML = ""
+        document.getElementById('logs_text_warnings').innerHTML = ""
+        login = document.getElementById('login').value
+        password = document.getElementById('password').value
+        base_soket.send(JSON.stringify({'cmd': "start_e2e", 'LOGIN': login, 'PASSWORD': password}));
+    };
+
+    document.querySelector('#start_e2e_ios').onclick = function(e) {
+        start_scroll_down()
+        document.getElementById('logs_text').innerHTML = ""
+        document.getElementById('logs_text_warnings').innerHTML = ""
+        login = document.getElementById('login').value
+        password = document.getElementById('password').value
+        base_soket.send(JSON.stringify({'cmd': "start_e2e_ios", 'LOGIN': login, 'PASSWORD': password}));
+    };
+
+    document.querySelector('#start_e2e_android').onclick = function(e) {
+        start_scroll_down()
+        document.getElementById('logs_text').innerHTML = ""
+        document.getElementById('logs_text_warnings').innerHTML = ""
+        login = document.getElementById('login').value
+        password = document.getElementById('password').value
+        base_soket.send(JSON.stringify({'cmd': "start_e2e_android", 'LOGIN': login, 'PASSWORD': password}));
+    };
+
+    document.querySelector('#start_price_diff').onclick = function(e) {
+        start_scroll_down()
+        document.getElementById('logs_text').innerHTML = ""
+        document.getElementById('logs_text_warnings').innerHTML = ""
+        FEED_TIMEOUT = document.getElementById('FEED_TIMEOUT').value
+        TESTS_ITER_COUNT = document.getElementById('TESTS_ITER_COUNT').value
+        base_soket.send(JSON.stringify({'cmd': "start_price_diff", "FEED_TIMEOUT": FEED_TIMEOUT, "TESTS_ITER_COUNT": TESTS_ITER_COUNT}));
+    };
+
+    document.querySelector('#start_visibility_diff').onclick = function(e) {
+        start_scroll_down()
+        document.getElementById('logs_text').innerHTML = ""
+        document.getElementById('logs_text_warnings').innerHTML = ""
+        FEED_TIMEOUT = document.getElementById('FEED_TIMEOUT').value
+        TESTS_ITER_COUNT = document.getElementById('TESTS_ITER_COUNT').value
+        base_soket.send(JSON.stringify({'cmd': "start_visibility_diff", "FEED_TIMEOUT": FEED_TIMEOUT, "TESTS_ITER_COUNT": TESTS_ITER_COUNT}));
+    };
+
+    document.querySelector('#stop_tests').onclick = function(e) {
+        var i;
+
+        for (i = 0; i < scroll.length; i++) {
+            clearInterval(scroll[i]);
+        }
+        var j;
+
+        for (j = 0; j < scroll_2.length; j++) {
+            clearInterval(scroll_2[j]);
+        }
+        base_soket.send(JSON.stringify({'cmd': "stop_tests"}));
+    };
+</script>
+</html>

@@ -1,0 +1,5 @@
+.idea
+.directory
+workspace.xml
+venv
+*__pycache__*

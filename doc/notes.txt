@@ -1,0 +1,13 @@
+debug run server:
+python3.6 manage.py runserver 0.0.0.0:9080
+nohup python3.6 manage.py runserver 0.0.0.0:9080 &
+
+
+
+sudo systemctl restart nginx
+
+sudo systemctl restart daphne_seb.service
+
+sudo systemctl status daphne_seb.service
+
+/etc/systemd/system/daphne_sed.service
